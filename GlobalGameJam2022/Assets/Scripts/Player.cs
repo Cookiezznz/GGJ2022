@@ -20,8 +20,12 @@ public class Player : MonoBehaviour
     private int i_damageHealed = 0;
     private int i_playerLevel = 0;
 
-    private int novaRange = 3; //int range^2 surrounding player.
+    private int novaRange = 2; //int range^2 surrounding player.
+    private int novaCooldown = 25;
+    private int novaCooldownTimer = 0;
     private int boltRange = 10; //int range^2 surrounding player.
+    private int boltCooldown = 2;
+    private int boltCooldownTimer = 0;
 
 
 
@@ -43,10 +47,24 @@ public class Player : MonoBehaviour
 
     public void Tick(string input)
     {
+        UpdateCooldowns();
+        lr.positionCount = 2;
         Vector3[] positions = { Vector3.zero, Vector3.zero };
         lr.SetPositions(positions);
         Move(input);
         AttackEnemy(); //Attack any enemy you move onto
+    }
+
+    void UpdateCooldowns()
+    {
+        if (novaCooldownTimer > 0)
+        {
+            novaCooldownTimer -= 1;
+        }
+        if (boltCooldownTimer > 0)
+        {
+            boltCooldownTimer -= 1;
+        }
     }
 
     public void Move(string input) //First action of turn
@@ -103,7 +121,7 @@ public class Player : MonoBehaviour
             {
                 if (transform.position == enemy.transform.position) //If Enemy overlaps player
                 {
-                    enemy.TakeDamage(i_damage);
+                    enemy.TakeDamage(i_damage, true);
                     i_damageDealt += i_damage;
                     if(enemy.IsDead())
                     {
@@ -198,6 +216,16 @@ public class Player : MonoBehaviour
         return i_xp;
     }
 
+    public int GetCooldownBolt()
+    {
+        return boltCooldownTimer;
+    }
+
+    public int GetCooldownNova()
+    {
+        return novaCooldownTimer;
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if(collision.gameObject.tag == "healthpickup")
@@ -232,13 +260,21 @@ public class Player : MonoBehaviour
 
     public void CastAbility(int ability)
     {
-        if(ability == 1)
+        if (ability == 1)
         {
-            CastShadowNova();
+            if (novaCooldownTimer == 0)
+            {
+                CastShadowNova();
+                novaCooldownTimer = novaCooldown;
+            }
         }
         else
         {
-            CastShadowBolt();
+            if (boltCooldownTimer == 0)
+            {
+                CastShadowBolt();
+                boltCooldownTimer = boltCooldown;
+            }
         }
     }
 
@@ -248,31 +284,45 @@ public class Player : MonoBehaviour
         //Hits all enemies in a 3x3 Range!
 
         Vector2 range_botleft = new Vector2(transform.position.x - novaRange, transform.position.y - novaRange);
-        Vector2 range_topright = new Vector2(transform.position.x + novaRange, transform.position.y + novaRange);
+        Vector2 range_topright = new Vector2(transform.position.x + novaRange, transform.position.x + novaRange);
 
-        int novaDamage = i_damage - (i_damage / 2);
+        int novaDamage = i_damage * 2;
         Collider2D[] hits = Physics2D.OverlapAreaAll(range_botleft, range_topright);
+
+        lr.positionCount = 8;
+        Vector3 pos1 = new Vector3(-novaRange, -novaRange);
+        Vector3 pos2 = new Vector3(-novaRange, novaRange);
+        Vector3 pos3 = new Vector3(novaRange, novaRange);
+        Vector3 pos4 = new Vector3(novaRange, -novaRange);
+        Vector3[] positions = { pos1, pos2, pos3, pos4, pos1, pos3, pos2, pos4 };
+        lr.SetPositions(positions);
+
+
         for (int i = 0; i < hits.Length; i++)
         {
             Enemy enemy = hits[i].gameObject.GetComponent<Enemy>();
             if (enemy != null)
             {
-                Debug.Log("Cast Shadow Nova! Hit " + enemy);
-                enemy.TakeDamage(novaDamage);
-                i_damageDealt += novaDamage;
-                if (enemy.IsDead())
+                if (enemy.tag.Contains("enemy")) ;
                 {
-                    //Add killcount and XP
-                    i_killCount++;
-                    i_xp += enemy.GetXp();
-                }
-                else
-                {
-                    //Focus enemy
-                    gc.SetFocusedEnemy(enemy);
+                    enemy.TakeDamage(novaDamage);
+                    i_damageDealt += novaDamage;
+                    if (enemy.IsDead())
+                    {
+                        //Add killcount and XP
+                        i_killCount++;
+                        i_xp += enemy.GetXp();
+                    }
+                    else
+                    {
+                        //Focus enemy
+                        gc.SetFocusedEnemy(enemy);
+                    }
+
                 }
             }
         }
+        //Draw line to hits
     }
 
     void CastShadowBolt()
@@ -281,26 +331,32 @@ public class Player : MonoBehaviour
         //Hits one enemy within range
         Vector2 range_botleft = new Vector2(transform.position.x - boltRange, transform.position.y - boltRange);
         Vector2 range_topright = new Vector2(transform.position.x + boltRange, transform.position.y + boltRange);
-
-
-        int boltDamage = i_damage * 2;
-        Collider2D[] enemies = Physics2D.OverlapAreaAll(range_botleft, range_topright, 9);
-        Enemy enemy = GetClosestEnemy(enemies).gameObject.GetComponent<Enemy>();
-        if (enemy != null && enemy.tag != "Player")
+        Enemy enemy = null;
+        int boltDamage = i_damage - i_damage / 10 * 3; ;
+        Collider2D[] enemies = Physics2D.OverlapAreaAll(range_botleft, range_topright);
+        if (enemies.Length > 0)
         {
-            Vector3[] positions = { Vector3.zero, enemy.transform.position - transform.position };
-            lr.SetPositions(positions);
-            enemy.TakeDamage(boltDamage);
-            if (enemy.IsDead())
+            Transform enemyTransform = GetClosestEnemy(enemies);
+            if (enemyTransform != null)
             {
-                //Add killcount and XP
-                i_killCount++;
-                i_xp += enemy.GetXp();
-            }
-            else
-            {
-                //Focus enemy
-                gc.SetFocusedEnemy(enemy);
+                if(enemyTransform.tag == "enemy")
+                {
+                    enemy = enemyTransform.GetComponent<Enemy>();
+                    Vector3[] positions = { Vector3.zero, enemy.transform.position - transform.position };
+                    lr.SetPositions(positions);
+                    enemy.TakeDamage(boltDamage);
+                    if (enemy.IsDead())
+                    {
+                        //Add killcount and XP
+                        i_killCount++;
+                        i_xp += enemy.GetXp();
+                    }
+                    else
+                    {
+                        //Focus enemy
+                        gc.SetFocusedEnemy(enemy);
+                    }
+                }
             }
         }
     }
@@ -312,12 +368,15 @@ public class Player : MonoBehaviour
         Vector3 currentPosition = transform.position;
         foreach (Collider2D potentialTarget in enemies)
         {
-            Vector3 directionToTarget = potentialTarget.transform.position - currentPosition;
-            float dSqrToTarget = directionToTarget.sqrMagnitude;
-            if (dSqrToTarget < closestDistanceSqr)
+            if (potentialTarget.tag != "Player")
             {
-                closestDistanceSqr = dSqrToTarget;
-                bestTarget = potentialTarget.transform;
+                Vector3 directionToTarget = potentialTarget.transform.position - currentPosition;
+                float dSqrToTarget = directionToTarget.sqrMagnitude;
+                if (dSqrToTarget < closestDistanceSqr)
+                {
+                    closestDistanceSqr = dSqrToTarget;
+                    bestTarget = potentialTarget.transform;
+                }
             }
         }
         return bestTarget;

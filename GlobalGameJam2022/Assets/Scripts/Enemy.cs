@@ -13,7 +13,7 @@ public class Enemy : MonoBehaviour
     private int i_xp = 5;
     private bool b_isDead = false;
     private bool b_attack = false;
-    private bool b_validSpawn = false;
+    private Vector3 prevPos;
 
     void Start()
     {
@@ -55,7 +55,7 @@ public class Enemy : MonoBehaviour
     public void Move()
     {
         gc = FindObjectOfType<Player>().GetComponent<gameController>();
-        Vector3 prevPos = transform.position;
+        prevPos = transform.position;
         Vector3Int bounds = gc.GetBounds();
         int direction = GetMoveDirection();
         switch (direction)
@@ -94,6 +94,7 @@ public class Enemy : MonoBehaviour
             b_attack = true;
             transform.position = prevPos;
         }
+
         //If Enemy overlaps Enemy, move to previous position.
         for (int i = 0; i < gc.enemies.Length; i++)
         {
@@ -105,6 +106,7 @@ public class Enemy : MonoBehaviour
                 }
             }
         }
+        
         
 
     }
@@ -162,10 +164,13 @@ public class Enemy : MonoBehaviour
         return b_attack;
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage, bool melee=false)
     {
         i_health -= damage;
-        b_attack = true;
+        if (melee)
+        {
+            b_attack = true;
+        }
         if (i_health <= 0)
         {
             Die();

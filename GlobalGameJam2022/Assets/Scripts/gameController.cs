@@ -21,6 +21,7 @@ public class gameController : MonoBehaviour
 
     //Variables
     public string input;
+    public string inputUIButton;
 
     private int turnsTaken;
     private int boundX = 35;
@@ -42,6 +43,12 @@ public class gameController : MonoBehaviour
             input = null;
             if (awaitInput)
             {
+                if(inputUIButton != null)
+                {
+                    input = inputUIButton;
+                    inputUIButton = null;
+
+                }
                 if (Input.GetKeyDown("w"))
                 {
                     input = "up";
@@ -64,11 +71,17 @@ public class gameController : MonoBehaviour
                 }
                 if (Input.GetKeyDown("q"))
                 {
-                    input = "ability1";
+                    if(player.GetCooldownNova() == 0)
+                    {
+                        input = "ability1";
+                    }
                 }
                 if (Input.GetKeyDown("e"))
                 {
-                    input = "ability2";
+                    if (player.GetCooldownBolt() == 0)
+                    {
+                        input = "ability2";
+                    }
                 }
                 if (input != null)
                 {
@@ -96,6 +109,11 @@ public class gameController : MonoBehaviour
         
 
 
+    }
+
+    public void PressUIElement(string element)
+    {
+        inputUIButton = element;
     }
 
     void Tick(string input)
@@ -205,7 +223,17 @@ public class gameController : MonoBehaviour
 
             }
 
-         
+            //Button Cooldowns
+            if (current.gameObject.name == "Ability1CDText")
+            {
+                current.text = player.GetCooldownNova().ToString();
+            }
+            if (current.gameObject.name == "Ability2CDText")
+            {
+                current.text = player.GetCooldownBolt().ToString();
+            }
+
+
         }
     }
 
