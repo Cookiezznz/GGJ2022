@@ -29,10 +29,12 @@ public class damagePopup : MonoBehaviour
             float disappearSpeed = 3f;
             textColor.a -= disappearSpeed * Time.deltaTime;
             popupText.color = textColor;
-        }
-        if (textColor.a == 0)
-        {
 
+        }
+        if (textColor.a <= 0)
+        {
+            //Delete itself
+            Destroy(this.gameObject);
         }
     }
 }

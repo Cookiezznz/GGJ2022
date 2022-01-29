@@ -58,12 +58,16 @@ public class Enemy : MonoBehaviour
         i_damage = i_damage + (gc.player.GetLevel() * 2);
     }
 
-    public void Move()
+    public void Move(bool random = false)
     {
         gc = FindObjectOfType<Player>().GetComponent<gameController>();
         prevPos = transform.position;
         Vector3Int bounds = gc.GetBounds();
-        int direction = GetMoveDirection();
+        int direction = Random.Range(0, 4);
+        if (!random)
+        {
+            direction = GetMoveDirection();
+        }
         switch (direction)
         {
             case 0:
@@ -93,7 +97,10 @@ public class Enemy : MonoBehaviour
             default:
                 break;
         }
-
+        if(transform.position == prevPos)
+        {
+            Move(true);
+        }
         //If Enemy overlaps player, move to previous position & flag for Attack
         if (transform.position == gc.player.transform.position) 
         {
@@ -110,6 +117,7 @@ public class Enemy : MonoBehaviour
                 if (transform.position == gc.enemies[i].transform.position) //If it has moved onto another enemy
                 {
                     transform.position = prevPos;
+                    Move(true);
                 }
             }
         }

@@ -294,6 +294,7 @@ public class Player : MonoBehaviour
         int novaDamage = i_damage * 2;
         Collider2D[] hits = Physics2D.OverlapAreaAll(range_botleft, range_topright);
 
+
         lr.positionCount = 8;
         Vector3 pos1 = new Vector3(-novaRange, -novaRange);
         Vector3 pos2 = new Vector3(-novaRange, novaRange);
@@ -308,7 +309,7 @@ public class Player : MonoBehaviour
             Enemy enemy = hits[i].gameObject.GetComponent<Enemy>();
             if (enemy != null)
             {
-                if (enemy.tag.Contains("enemy")) ;
+                if (enemy.CompareTag("enemy")) ;
                 {
                     enemy.TakeDamage(novaDamage);
                     i_damageDealt += novaDamage;
@@ -344,7 +345,7 @@ public class Player : MonoBehaviour
             Transform enemyTransform = GetClosestEnemy(enemies);
             if (enemyTransform != null)
             {
-                if(enemyTransform.tag == "enemy")
+                if(enemyTransform.CompareTag("enemy"))
                 {
                     enemy = enemyTransform.GetComponent<Enemy>();
                     Vector3[] positions = { Vector3.zero, enemy.transform.position - transform.position };
