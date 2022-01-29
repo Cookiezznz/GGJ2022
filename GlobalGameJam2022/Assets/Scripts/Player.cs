@@ -7,6 +7,8 @@ public class Player : MonoBehaviour
     public gameController gc;
     public spawnController sc;
     public LineRenderer lr;
+    public gameAssets gameAssets;
+    public popupController damagePopup;
 
     //Variables/Statistics
     private Vector2 scanRange = new Vector2(3, 3);
@@ -158,6 +160,9 @@ public class Player : MonoBehaviour
             Die();
         }
         i_damageTaken += damage;
+
+        //Damage Popup
+        damagePopup.Create(transform.position, damage, Color.red);
     }
 
     public void HealDamage(int value)

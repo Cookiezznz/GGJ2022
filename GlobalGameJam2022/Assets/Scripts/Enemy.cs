@@ -6,6 +6,7 @@ public class Enemy : MonoBehaviour
 {
     public gameController gc;
     public Collider2D col;
+    public popupController damagePopup;
     public int enemyNum;
 
     private int i_health = 20;
@@ -17,8 +18,13 @@ public class Enemy : MonoBehaviour
 
     void Start()
     {
+
+        
         col = GetComponent<Collider2D>();
         gc = FindObjectOfType<Player>().GetComponent<gameController>();
+        damagePopup = GameObject.Find("popupController").GetComponent<popupController>();
+
+        
 
         //Create spawn location
         int spawnX = 0;
@@ -94,6 +100,7 @@ public class Enemy : MonoBehaviour
             b_attack = true;
             transform.position = prevPos;
         }
+
 
         //If Enemy overlaps Enemy, move to previous position.
         for (int i = 0; i < gc.enemies.Length; i++)
@@ -175,6 +182,11 @@ public class Enemy : MonoBehaviour
         {
             Die();
         }
+
+        //Damage Popup
+
+        damagePopup.Create(transform.position, damage, Color.yellow);
+
     }
 
     void Die()
