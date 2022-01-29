@@ -10,33 +10,46 @@ public class Enemy : MonoBehaviour
 
     private int i_health = 20;
     private int i_damage = 3;
+    private int i_xp = 5;
     private bool b_isDead = false;
     private bool b_attack = false;
+    private bool b_validSpawn = false;
 
     void Start()
     {
         col = GetComponent<Collider2D>();
         gc = FindObjectOfType<Player>().GetComponent<gameController>();
 
-        bool valid = false;
-        int randX;
-        int randY;
-        do
+        //Create spawn location
+        int spawnX = 0;
+        int spawnY = 0;
+        int spawnWall = Random.Range(0, 4); //Top/Left/Right/Down walls -- Choose a random wall to spawn on
+        switch(spawnWall)
         {
-            randX = Random.Range(0, gc.GetBounds().x);
-            randY = Random.Range(0, gc.GetBounds().y);
-            if (randX < gc.player.transform.position.x - 10 && randX > gc.player.transform.position.x + 10)
-            {
-                if (randY < gc.player.transform.position.y - 10 && randY > gc.player.transform.position.y + 10)
-                {
-                    valid = true;
-                }
-            }
+            case 0: //Spawn on top wall
+                spawnX = Random.Range(0, gc.GetBounds().x);
+                spawnY = gc.GetBounds().y - 1;
+                break;
+            case 1: //Spawn on Left wall
+                spawnX = 0;
+                spawnY = Random.Range(0, gc.GetBounds().y);
+                break;
+            case 2: //Spawn on Right wall
+                spawnX = gc.GetBounds().x - 1;
+                spawnY = Random.Range(0, gc.GetBounds().y);
+                break;
+            case 3: //Spawn on Bottom wall
+                spawnX = Random.Range(0, gc.GetBounds().x);
+                spawnY = 0;
+                break;
+            default:
+                break;
+        }
+        transform.position = new Vector3(spawnX, spawnY, 0);
 
-            
-
-        } while (!valid);
-        transform.position = new Vector3(randX, randY, 0);
+        //Set Stats
+        i_health = i_health + (gc.player.GetLevel() * 2);
+        i_damage = i_damage + (gc.player.GetLevel() * 2);
     }
 
     public void Move()
@@ -169,5 +182,19 @@ public class Enemy : MonoBehaviour
     {
         return b_isDead;
     }
+
+    public int GetHealth()
+    {
+        return i_health;
+    }
+
+    public int GetDamage()
+    {
+        return i_damage;
+    }
     
+    public int GetXp()
+    {
+        return i_xp;
+    }
 }
