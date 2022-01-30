@@ -142,6 +142,7 @@ public class gameController : MonoBehaviour
                         enemy.AttackPlayer(player);
                     }
                 }
+                enemy.moveAttemptCount = 0;
             }
             else //Else - Destroy it! Cast it into the fire!
             {
@@ -247,7 +248,6 @@ public class gameController : MonoBehaviour
         TextMeshProUGUI[] tmpA_youDied = canvas.GetComponentsInChildren<TextMeshProUGUI>(true);
         for(int i = 0; i < tmpA_youDied.Length; i++)
         {
-            Debug.Log(tmpA_youDied[i].gameObject.name);
             if(tmpA_youDied[i].gameObject.name == "YouDied")
             {
                 tmpA_youDied[i].gameObject.SetActive(true);

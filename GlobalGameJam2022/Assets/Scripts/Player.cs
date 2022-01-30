@@ -4,11 +4,14 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public audioController ac;
     public gameController gc;
     public spawnController sc;
     public LineRenderer lr;
     public gameAssets gameAssets;
     public popupController damagePopup;
+    public Sprite playerDeadSprite;
+    public Animator anim;
 
     //Variables/Statistics
     private Vector2 scanRange = new Vector2(3, 3);
@@ -37,6 +40,7 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        ac = GameObject.Find("AudioController").GetComponent<audioController>();
         transform.position = gc.GetBounds() / 2;
         i_maxHP = i_health;
     }
@@ -124,6 +128,7 @@ public class Player : MonoBehaviour
                 if (transform.position == enemy.transform.position) //If Enemy overlaps player
                 {
                     enemy.TakeDamage(i_damage, true);
+                    ac.PlaySound(ac.playerMelee);
                     i_damageDealt += i_damage;
                     if(enemy.IsDead())
                     {
@@ -163,6 +168,7 @@ public class Player : MonoBehaviour
 
         //Damage Popup
         damagePopup.Create(transform.position, damage, Color.red);
+        ac.PlaySound(ac.playerHit);
     }
 
     public void HealDamage(int value)
@@ -189,7 +195,16 @@ public class Player : MonoBehaviour
     {
         b_isDead = true;
         Debug.Log(this.gameObject + " Died");
+        ac.source.volume = 0.7f;
+        ac.PlaySound(ac.playerDie);
+        ac.source.volume = 0.3f;
+        ac.PlaySound(ac.enemyCelebrate);
+        ac.source.volume = 0.6f;
+        anim.SetBool("isDead", true);
+        gameObject.GetComponent<SpriteRenderer>().sprite = playerDeadSprite;
+
     }
+
 
     public bool IsDead()
     {
@@ -253,6 +268,7 @@ public class Player : MonoBehaviour
     {
         if(i_xp > 100) //Level up
         {
+            ac.PlaySound(ac.levelUp);
             i_xp = 0;
             i_playerLevel++;
             //Full Heal + More Max HP
@@ -311,6 +327,7 @@ public class Player : MonoBehaviour
             {
                 if (enemy.CompareTag("enemy")) ;
                 {
+                    ac.PlaySound(ac.shadowNova);
                     enemy.TakeDamage(novaDamage);
                     i_damageDealt += novaDamage;
                     if (enemy.IsDead())
@@ -351,6 +368,7 @@ public class Player : MonoBehaviour
                     Vector3[] positions = { Vector3.zero, enemy.transform.position - transform.position };
                     lr.SetPositions(positions);
                     enemy.TakeDamage(boltDamage);
+                    ac.PlaySound(ac.shadowBolt);
                     if (enemy.IsDead())
                     {
                         //Add killcount and XP

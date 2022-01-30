@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+    public audioController ac;
     public gameController gc;
     public Collider2D col;
     public popupController damagePopup;
@@ -14,12 +15,13 @@ public class Enemy : MonoBehaviour
     private int i_xp = 5;
     private bool b_isDead = false;
     private bool b_attack = false;
+    public int moveAttemptCount;
     private Vector3 prevPos;
 
     void Start()
     {
-
-        
+        gameObject.name = "Warrior of Light";
+        ac = GameObject.Find("AudioController").GetComponent<audioController>();
         col = GetComponent<Collider2D>();
         gc = FindObjectOfType<Player>().GetComponent<gameController>();
         damagePopup = GameObject.Find("popupController").GetComponent<popupController>();
@@ -58,12 +60,12 @@ public class Enemy : MonoBehaviour
         i_damage = i_damage + (gc.player.GetLevel() * 2);
     }
 
-    public void Move(bool random = false)
+    public void Move(bool random = false, int direction = 0)
     {
+        moveAttemptCount++;
         gc = FindObjectOfType<Player>().GetComponent<gameController>();
         prevPos = transform.position;
         Vector3Int bounds = gc.GetBounds();
-        int direction = Random.Range(0, 4);
         if (!random)
         {
             direction = GetMoveDirection();
@@ -97,9 +99,9 @@ public class Enemy : MonoBehaviour
             default:
                 break;
         }
-        if(transform.position == prevPos)
+        if(transform.position == prevPos && moveAttemptCount < 4) //If did not move
         {
-            Move(true);
+            Move(true, direction++);
         }
         //If Enemy overlaps player, move to previous position & flag for Attack
         if (transform.position == gc.player.transform.position) 
@@ -107,7 +109,6 @@ public class Enemy : MonoBehaviour
             b_attack = true;
             transform.position = prevPos;
         }
-
 
         //If Enemy overlaps Enemy, move to previous position.
         for (int i = 0; i < gc.enemies.Length; i++)
@@ -117,7 +118,11 @@ public class Enemy : MonoBehaviour
                 if (transform.position == gc.enemies[i].transform.position) //If it has moved onto another enemy
                 {
                     transform.position = prevPos;
-                    Move(true);
+                    if(moveAttemptCount < 4)
+                    {
+                        Move(true, direction++);
+
+                    }
                 }
             }
         }
@@ -192,8 +197,16 @@ public class Enemy : MonoBehaviour
         }
 
         //Damage Popup
-
         damagePopup.Create(transform.position, damage, Color.yellow);
+
+        if(Random.Range(0, 10) < 2) //Play sound 20% of the time
+        {
+            ac.source.volume = 0.3f;
+            ac.PlaySound(ac.enemyHit);
+            ac.source.volume = 0.5f;
+
+        }    
+
 
     }
 
@@ -201,6 +214,7 @@ public class Enemy : MonoBehaviour
     {
         i_health = 0;
         b_isDead = true;
+        ac.PlaySound(ac.enemyDie);
     }
 
     public bool IsDead()
